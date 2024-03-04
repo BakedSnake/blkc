@@ -1,0 +1,18 @@
+[
+  {
+    "id": 0,
+    "label": "Server label for group commands",
+    "name": "Server Name",
+    "user": "User Name",
+    "address": "IP Address or WAN",
+    "sshport": "SSH connection port"
+  },
+  {
+    "id": -1,
+    "label": "Label not found",
+    "name": "No server with that name was found.",
+    "user": "No user found.",
+    "address": "No ",
+    "sshport": "Could not use port "
+  }
+]
