@@ -52,13 +52,29 @@ async fn main() {
                 eprintln!("Wrong input")
             }
         }
-        if static_args[1].contains("--help") || static_args[1].contains("-h") {
+        if static_args[1].contains("--help") || static_args[1].contains("-h")
+        && static_args[2].contains("--nocolor") || static_args[2].contains("-C") {
+            unsafe {
+                MAIN_COLOR_PREFIX = "";
+                MAIN_COLOR_SUFFIX = "";
+                ROOT_COLOR_PREFIX = "";
+            }
             help();
         }
     } else {
-        help();
+        if static_args.len() <= 1 {
+            help();
+        } else if static_args.len() >= 1 && static_args[1].contains("--nocolor") || static_args[1].contains("-C") {
+            unsafe {
+                MAIN_COLOR_PREFIX = "";
+                MAIN_COLOR_SUFFIX = "";
+                ROOT_COLOR_PREFIX = "";
+            }
+            help();
+        } else {
+            help();
+        }
     }
-
 }
 
 fn help() {
