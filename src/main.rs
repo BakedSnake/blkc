@@ -62,15 +62,17 @@ async fn main() {
 }
 
 fn help() {
-    println!("{}Usage:", "\x1b[32m");
-    println!("-------------------------{}", "\x1b[0m");
-    println!("blkc --[run|srun] --[name|label] name|label command\n");
+    unsafe {
+        println!("{}Usage:", MAIN_COLOR_PREFIX);
+        println!("-------------------------{}", MAIN_COLOR_SUFFIX);
+    }
+    println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
     println!("--nocolor,    -C    Disable color output");
     println!("--run,        -r    Run command as user");
     println!("--srun,       -sr   Run command as root user");
     println!("--name,       -n    Name of the server");
     println!("--label,      -l    Label of the server\n");
-    println!("--srun and --run cannot be used at the same time.\nThe same goes for --name and --label.\n")
+    println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
 }
 
 async fn run_multi_command_as_root(server_label: &str, command: &'static str) {
