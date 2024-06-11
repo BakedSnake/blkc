@@ -7,10 +7,25 @@ use std::path::Path;
 use futures::stream::{FuturesUnordered, StreamExt};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+static mut ROOT_COLOR_PREFIX: &str = "\x1b[33m";
+static mut MAIN_COLOR_PREFIX: &str = "\x1b[32m";
+static mut MAIN_COLOR_SUFFIX: &str = "\x1b[0m";
+
 #[tokio::main]
 async fn main() {
     let args: Vec<String> = std::env::args().collect();
     let static_args: &'static Vec<String> = Box::leak(Box::new(args.clone()));
+    if static_args.len() >= 5 {
+        unsafe {
+            if static_args.len() > 5 {
+                if static_args[5].contains("--nocolor") || static_args[5].contains("-C") {
+                    MAIN_COLOR_PREFIX = "";
+                    MAIN_COLOR_SUFFIX = "";
+                    ROOT_COLOR_PREFIX = "";
+                }
+            }
+        }
+    }
     if static_args.len() > 2 {
         if static_args[1].contains("--show") || static_args[1].contains("-s") {
             if static_args[2].contains("all") {
@@ -18,7 +33,8 @@ async fn main() {
             } else {
                 print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), &static_args[2]);
             }
-        } else if static_args[1].contains("--run") || static_args[1].contains("-r") {
+        }
+        if static_args[1].contains("--run") || static_args[1].contains("-r") {
             if static_args[2].contains("--label") || static_args[2].contains("-l") {
                 futures::executor::block_on(run_multi_command(&static_args[3], &static_args[4]));
             } else if static_args[2].contains("--name") || static_args[2].contains("-n"){
@@ -70,13 +86,18 @@ async fn run_multi_command_as_root(server_label: &str, command: &'static str) {
             let handle = async move {
                 match root_cmd(server_name, server_sshport, server_user, server_address, command).await {
                     Ok(out) => { 
-                        println!("\n{}ROOT{} {}Label: {} {} -> {} Command: {} {}", "\x1b[33m", "\x1b[0m", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("\n{}ROOT{} {}Label: {} {} -> {} Command: {} {}", ROOT_COLOR_PREFIX, MAIN_COLOR_SUFFIX, MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("\n{}\n", out)
                     },
                     Err(err) => {
-                        println!("\n{}ROOT{} {}Label: {} {} -> {} Command: {} {}", "\x1b[33m", "\x1b[0m", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+
+                            println!("\n{}ROOT{} {}Label: {} {} -> {} Command: {} {}", ROOT_COLOR_PREFIX, MAIN_COLOR_SUFFIX, MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("{}", err)
                     }
                 };
@@ -100,13 +121,17 @@ async fn run_multi_command(server_label: &str, command: &'static str) {
             let task = async move {
                 match cmd(server_sshport, server_user, server_address, command).await {
                     Ok(out) => { 
-                        println!("{} Label: {} {} -> {} Command: {} {}", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("{} Label: {} {} -> {} Command: {} {}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("{}\n", out) 
                     },
                     Err(err) => {
-                        println!("{} Label: {} {} -> {} Command: {} {}", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("{} Label: {} {} -> {} Command: {} {}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("{}", err)
                     }
                 };
@@ -131,13 +156,17 @@ async fn run_command_as_root(server_name: &str, command: &'static str) {
             let handle = async move {
                 match root_cmd(server_name, server_sshport, server_user, server_address, command).await {
                     Ok(out) => {
-                        println!("\n{}ROOT{} {}Server: {} {} -> {} Command: {} {}", "\x1b[33m", "\x1b[0m", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("\n{}ROOT{} {}Server: {} {} -> {} Command: {} {}", ROOT_COLOR_PREFIX, MAIN_COLOR_SUFFIX, MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("\n{}\n", out)
                     },
                     Err(err) => {
-                        println!("\n{}ROOT{} {}Server: {} {} -> {} Command: {} {}", "\x1b[33m", "\x1b[0m", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("\n{}ROOT{} {}Server: {} {} -> {} Command: {} {}", ROOT_COLOR_PREFIX, MAIN_COLOR_SUFFIX, MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("{}", err)
                     }
                 };
@@ -161,13 +190,17 @@ async fn run_command(server_name: &str, command: &'static str) {
             let handle = async move {
                 match cmd(server_sshport, server_user, server_address, command).await {
                     Ok(out) => { 
-                        println!("{} Server: {} {} -> {} Command: {} {}", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("{} Server: {} {} -> {} Command: {} {}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("{}\n", out)
                     },
                     Err(err) => {
-                        println!("{} Server: {} {} -> {} Command: {} {}", "\x1b[32m", "\x1b[0m", server.name,  "\x1b[32m", "\x1b[0m", command);
-                        println!("{}-------------------------{}", "\x1b[32m", "\x1b[0m");
+                        unsafe {
+                            println!("{} Server: {} {} -> {} Command: {} {}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, server.name,  MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX, command);
+                            println!("{}-------------------------{}", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+                        }
                         println!("{}", err)
                     }
                 };
