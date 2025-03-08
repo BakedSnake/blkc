@@ -2,11 +2,13 @@ pub mod commands;
 
 use blkc::*;
 use commands::*;
+use std::thread;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let static_args: &'static Vec<String> = Box::leak(Box::new(args.clone()));
-    let colors = get_colors(args.clone());
+    let colors: Vec<String> = get_colors(args.clone());
+    let static_colors: &'static Vec<String> = Box::leak(Box::new(colors.clone()));
     let servers_json = server_list().unwrap();
     let servers = serde_json::from_str(servers_json).expect("Failed to deserialize.");
 
@@ -19,7 +21,12 @@ fn main() {
                         false => ()
                     }
                     match &args[2].contains("--label") {
-                        true => remote_commands(&args[3], &args[4], colors.clone()),
+                        true => {
+                            let handle = thread::spawn(move || {
+                                remote_commands(&static_args[3], &static_args[4], &static_colors)
+                            });
+                            handle.join().unwrap();
+                        },
                         false => ()
                     }
                 },
