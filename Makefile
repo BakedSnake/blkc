@@ -1,7 +1,6 @@
 PREFIX=/usr/local
 INSTALL_DIR=$(PREFIX)/bin
-CURRENT_USER=$(shell whoami)
-CONFIG_DIR=/home/$(CURRENT_USER)/.config/blkc/
+CONFIG_DIR=/home/$(USER)/.config/blkc/
 
 config:
 	mkdir -p $(CONFIG_DIR) 
