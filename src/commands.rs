@@ -14,7 +14,7 @@ pub fn remote_commands(server_label: &str, command: &str, colors: Vec<String>) {
                 session.parse_config(None).unwrap();
                 session.connect().unwrap();
                 println!("{:?}",session.is_server_known());
-                let pass_key = user_pass(server.name.to_string()).unwrap();
+                let pass_key = get_passkey(server.name.to_string()).unwrap();
                 session.userauth_publickey_auto(Some(&pass_key)).unwrap();
 
                 let cmd = command.as_bytes();
@@ -44,7 +44,7 @@ pub fn remote_command(server_name: &str, command: &str, colors: Vec<String>) {
     session.parse_config(None).unwrap();
     session.connect().unwrap();
     println!("{:?}",session.is_server_known());
-    let pass_key = user_pass(server_name.to_string()).unwrap();
+    let pass_key = get_passkey(server_name.to_string()).unwrap();
     session.userauth_publickey_auto(Some(&pass_key)).unwrap();
 
     let cmd = command.as_bytes();

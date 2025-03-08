@@ -45,7 +45,7 @@ pub fn get_colors(args: Vec<String>) -> Vec<String> {
     colors
 }
 
-pub fn user_pass(server_name: String) -> std::io::Result<String> {
+pub fn get_passkey(server_name: String) -> std::io::Result<String> {
     let output = Command::new("bash")
         .arg("-c")
         .arg(String::from(format!("pass {}-key", server_name)))
