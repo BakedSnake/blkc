@@ -9,42 +9,46 @@ async fn main() {
     let static_args: &'static Vec<String> = Box::leak(Box::new(args.clone()));
     let colors = get_colors(args);
 
-    if static_args.len() > 2 {
-        if static_args[1].contains("--show") || static_args[1].contains("-s") {
-            if static_args[2].contains("all") {
-                print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), "");
-            } else {
-                print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), &static_args[2]);
+    match static_args.len() {
+        5 => {
+            if static_args[1].contains("--run") || static_args[1].contains("-r") {
+                if static_args[2].contains("--label") || static_args[2].contains("-l") {
+                    futures::executor::block_on(run_multi_command(&static_args[3], &static_args[4], &colors));
+                } else if static_args[2].contains("--name") || static_args[2].contains("-n"){
+                    futures::executor::block_on(run_command(&static_args[3], &static_args[4], &colors));
+                } else {
+                    eprintln!("Wrong input")
+                }
             }
-        }
-        if static_args[1].contains("--run") || static_args[1].contains("-r") {
-            if static_args[2].contains("--label") || static_args[2].contains("-l") {
-                futures::executor::block_on(run_multi_command(&static_args[3], &static_args[4], &colors));
-            } else if static_args[2].contains("--name") || static_args[2].contains("-n"){
-                futures::executor::block_on(run_command(&static_args[3], &static_args[4], &colors));
-            } else {
-                eprintln!("Wrong input")
+            if static_args[1].contains("--srun") || static_args[1].contains("-sr") {
+                if static_args[2].contains("--label") || static_args[2].contains("-l") {
+                    futures::executor::block_on(run_multi_command_as_root(&static_args[3], &static_args[4], &colors));
+                } else if static_args[2].contains("--name") || static_args[2].contains("-n"){
+                    futures::executor::block_on(run_command_as_root(&static_args[3], &static_args[4], &colors));
+                } else {
+                    eprintln!("Wrong input")
+                }
             }
-        } 
-        if static_args[1].contains("--srun") || static_args[1].contains("-sr") {
-            if static_args[2].contains("--label") || static_args[2].contains("-l") {
-                futures::executor::block_on(run_multi_command_as_root(&static_args[3], &static_args[4], &colors));
-            } else if static_args[2].contains("--name") || static_args[2].contains("-n"){
-                futures::executor::block_on(run_command_as_root(&static_args[3], &static_args[4], &colors));
-            } else {
-                eprintln!("Wrong input")
+        },
+        3 => {
+            match static_args[1].contains("--show") || static_args[1].contains("-s") {
+                true => match static_args[2].contains("all") {
+                    true => print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), ""),
+                    false => print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), &static_args[2])
+                },
+                false => return
             }
-        }
-        if static_args[1].contains("--help") || static_args[1].contains("-h") {
-            help(colors);
-        }
-    } else {
-        if static_args.len() <= 1 {
-            help(colors);
-        } else {
-            help(colors);
-        }
+        },
+        2 => {
+            match static_args[1].contains("--help") || static_args[1].contains("-h") {
+                true => help(colors.clone()),
+                false => return
+            }
+        },
+        _ => help(colors)
+
     }
+
 }
 
 fn help(colors: Vec<String>) {
