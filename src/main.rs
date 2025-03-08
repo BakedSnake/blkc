@@ -7,7 +7,8 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let static_args: &'static Vec<String> = Box::leak(Box::new(args.clone()));
     let colors = get_colors(args.clone());
-    let servers = server_list().unwrap();
+    let servers_json = server_list().unwrap();
+    let servers = serde_json::from_str(servers_json).expect("Failed to deserialize.");
 
     match static_args.len() {
         5 => {
@@ -28,8 +29,8 @@ fn main() {
         3 => {
             match static_args[1].contains("--show") || static_args[1].contains("-s") {
                 true => match static_args[2].contains("all") {
-                    true => print_server_details(serde_json::from_str(servers).expect("Failed to deserialize."), ""),
-                    false => print_server_details(serde_json::from_str(servers).expect("Failed to deserialize."), &static_args[2])
+                    true => print_server_details(servers, ""),
+                    false => print_server_details(servers, &static_args[2])
                 },
                 false => return
             }
