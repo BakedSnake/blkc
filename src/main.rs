@@ -7,13 +7,20 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let static_args: &'static Vec<String> = Box::leak(Box::new(args.clone()));
     let colors = get_colors(args.clone());
+    let servers = server_list().unwrap();
 
     match static_args.len() {
         5 => {
             match args[1].contains("--run") {
-                true => match &args[2].contains("--name") {
-                    true => remote_command(&args[3], &args[4], colors),
-                    false => return
+                true => {
+                    match &args[2].contains("--name") {
+                        true => remote_command(&args[3], &args[4], colors.clone()),
+                        false => ()
+                    }
+                    match &args[2].contains("--label") {
+                        true => remote_commands(&args[3], &args[4], colors.clone()),
+                        false => ()
+                    }
                 },
                 false => return
             }
@@ -21,8 +28,8 @@ fn main() {
         3 => {
             match static_args[1].contains("--show") || static_args[1].contains("-s") {
                 true => match static_args[2].contains("all") {
-                    true => print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), ""),
-                    false => print_server_details(serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize."), &static_args[2])
+                    true => print_server_details(serde_json::from_str(servers).expect("Failed to deserialize."), ""),
+                    false => print_server_details(serde_json::from_str(servers).expect("Failed to deserialize."), &static_args[2])
                 },
                 false => return
             }
