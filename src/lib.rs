@@ -19,19 +19,20 @@ pub struct Server {
 
 pub fn print_server_details(vec_data: Vec<Server>, server_name: &'static str) {
     for server in vec_data {
-        if !server_name.is_empty() {
-            if server.name == server_name {
-                print!(
+        match !server_name.is_empty() {
+            true => match server.name == server_name {
+                true => print!(
                     "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
                     server.name, server.user, server.address, server.sshport, server.label
-                );
-            }
-        } else {
-            if server.id > 0 {
-                print!(
+                ),
+                false => ()
+            },
+            false => match server.id > 0 {
+                true => print!(
                     "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
                     server.name, server.user, server.address, server.sshport, server.label
-                );
+                ),
+                false => ()
             }
         }
     }
