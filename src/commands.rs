@@ -23,7 +23,10 @@ pub fn multi_remote_command(server_label: &'static str, command: &'static str, c
     };
 
     for handle in handles {
-        handle.join().unwrap();
+        match handle.join() {
+            Ok(h) => h,
+            Err(err) => { eprintln!("Error: {err:?}"); return }
+        }
     }
 }
 
@@ -52,11 +55,27 @@ fn run_command(mut session: Session, server_name: &str, command: &str, colors: V
 fn get_session(server_name: &str) -> Session {
     let mut session = Session::new().unwrap();
     session.set_host(&server_name.to_lowercase()).unwrap();
-    session.parse_config(None).unwrap();
-    session.connect().unwrap();
+
+    match session.parse_config(None) {
+        Ok(config) => config,
+        Err(err) => eprintln!("Error: {err}")
+    }
+
+    match session.connect() {
+        Ok(conn) => conn,
+        Err(err) => eprintln!("Error: {err}")
+    }
+
     //println!("{:?}",session.is_server_known());
-    let pass_key = get_passkey(server_name.to_string()).unwrap();
-    session.userauth_publickey_auto(Some(&pass_key)).unwrap();
+    let pass_key = match get_passkey(server_name.to_string()) {
+        Ok(pk) => pk,
+        Err(_) => String::new()
+    };
+
+    match session.userauth_publickey_auto(Some(&pass_key)) {
+        Ok(pk) => pk,
+        Err(err) => eprintln!("Error: {err}")
+    }
 
     session
 }
