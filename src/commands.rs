@@ -2,7 +2,7 @@ use ssh::*;
 use blkc::*;
 use std::io::Read;
 use std::str::from_utf8;
-use std::thread;
+use std::{thread, usize};
 
 pub fn multi_remote_command(server_label: &'static str, command: &'static str, colors: &'static Vec<String>) {
     let mut handles = Vec::new();
@@ -37,14 +37,37 @@ pub fn single_remote_command(server_name: &str, command: &str, colors: Vec<Strin
 
 fn run_command(mut session: Session, server_name: &str, command: &str, colors: Vec<String>) {
     let cmd = command.as_bytes();
-    let channel = &mut session.channel_new().unwrap();
-    channel.open_session().unwrap();
-    channel.request_exec(cmd).unwrap();
-    channel.send_eof().unwrap();
+    let mut channel = match session.channel_new() {
+        Ok(chan) => chan,
+        Err(err) => { eprintln!("Error: {err}"); return }
+    };
+
+    match channel.open_session() {
+        Ok(chan) => chan,
+        Err(err) => eprintln!("Error: {err}")
+    }
+
+    match channel.request_exec(cmd) {
+        Ok(chan) => chan,
+        Err(err) => eprintln!("Error: {err}")
+    }
+
+    match channel.send_eof() {
+        Ok(chan) => chan,
+        Err(err) => eprintln!("Error: {err}")
+    }
 
     let mut buf = Vec::new();
-    channel.stdout().read_to_end(&mut buf).unwrap();
-    let output = from_utf8(&buf).unwrap();
+    match channel.stdout().read_to_end(&mut buf) {
+        Ok(chan) => chan,
+        Err(_) => 0 as usize
+    };
+
+    let output = match from_utf8(&buf) {
+        Ok(out) => out,
+        Err(err) => { eprintln!("Error: {err}"); return }
+
+    };
 
     println!();
     println!("{} Label: {} {} -> {} Command: {} {}", colors[1], colors[2], server_name,  colors[1], colors[2], command);
