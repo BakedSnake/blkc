@@ -71,6 +71,22 @@ pub fn get_passkey(server_name: String) -> std::io::Result<String> {
     }
 }
 
+pub fn get_userpass(server_name: String) -> std::io::Result<String> {
+    let output = Command::new("bash")
+        .arg("-c")
+        .arg(String::from(format!("pass {}", server_name)))
+        .output()
+        .expect("Failed to execute command");
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    } else {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("Failed to get password. {}", output.status),
+        ))
+    }
+}
+
 pub fn get_sshkey() -> String {
     let home_cfg = std::env::var("HOME").unwrap().to_string() + "/.config/blkc/blkc.conf";
     let file = File::open(home_cfg).unwrap();
