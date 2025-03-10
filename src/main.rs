@@ -42,6 +42,15 @@ fn main() {
                         true => single_root_remote_command(&args[3], &args[4], colors.clone()),
                         false => ()
                     }
+                    match &args[2].contains("--label") {
+                        true => {
+                            let handle = thread::spawn(move || {
+                                multi_remote_command(&static_args[3], &static_args[4], static_colors)
+                            });
+                            handle.join().unwrap();
+                        },
+                        false => ()
+                    }
                 },
                 false => return
             }
