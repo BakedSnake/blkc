@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::process::Command;
-use std::io::Read;
+use std::io::{BufRead, BufReader, Read};
 use serde::{Deserialize, Serialize};
 
 pub const ROOT_COLOR_PREFIX: &str = "\x1b[33m";
@@ -69,6 +69,27 @@ pub fn get_passkey(server_name: String) -> std::io::Result<String> {
             format!("Failed to get password. {}", output.status),
         ))
     }
+}
+
+pub fn get_sshkey() -> String {
+    let home_cfg = std::env::var("HOME").unwrap().to_string() + "/.config/blkc/blkc.conf";
+    let file = File::open(home_cfg).unwrap();
+    let reader = BufReader::new(file);
+    let mut key_path = String::new();
+
+    for line in reader.lines() {
+        let line = line.unwrap();
+        let parts: Vec<&str> = line.splitn(2, '=').collect();
+        if parts.len() == 2 {
+            let key = parts[0].trim();
+            let value = parts[1].trim();
+            if key == "ssh_key" {
+                key_path = value.to_string();
+            }
+        }
+    }
+
+    key_path
 }
 
 pub fn server_list<'a>() -> std::io::Result<&'a str> {
