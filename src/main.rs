@@ -21,7 +21,7 @@ fn main() {
             match args[1].contains("--run") {
                 true => {
                     match &args[2].contains("--name") {
-                        true => single_remote_command(&args[3], &args[4], colors),
+                        true => single_remote_command(&args[3], &args[4], colors.clone()),
                         false => ()
                     }
                     match &args[2].contains("--label") {
@@ -31,6 +31,15 @@ fn main() {
                             });
                             handle.join().unwrap();
                         },
+                        false => ()
+                    }
+                },
+                false => ()
+            }
+            match args[1].contains("--srun") {
+                true => {
+                    match &args[2].contains("--name") {
+                        true => single_root_remote_command(&args[3], &args[4], colors.clone()),
                         false => ()
                     }
                 },
