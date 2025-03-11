@@ -103,10 +103,14 @@ fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<S
 }
 
 pub fn get_session(server_name: &str) -> Session {
-    let vec_data: Vec<Server> = serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize...");
+    let servers_json = match server_list() {
+        Ok(json) => json,
+        Err(err) => { eprintln!("Error: {err}"); "" }
+    };
+    let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
     let (mut server_sshport,mut server_user,mut server_address) = ("", "", "");
     let key_path = get_sshkey();
-    for server in &vec_data {
+    for server in &servers {
         if server.name == server_name {
             server_sshport = server.sshport;
             server_user = server.user;
