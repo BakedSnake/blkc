@@ -3,21 +3,16 @@ use std::net::TcpStream;
 use std::path::Path;
 use blkc::*;
 use std::io::{Read, Write};
-use std::str::from_utf8;
-use std::{thread, usize};
+use std::thread;
 
-pub fn multi_root_remote_command(server_label: &str, command: &'static str, colors: &'static Vec<String>) {
+pub fn multi_root_remote_command(server_label: &str, command: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
     let mut handles = Vec::new();
-    let vec_data: Vec<Server> = match serde_json::from_str(&server_list().unwrap()) {
-        Ok(list) => list,
-        Err(err) => { eprintln!("Error: {err}"); return }
-    };
 
-    for server in vec_data {
+    for server in servers {
         match server.label == server_label {
             true => {
                 let handle = thread::spawn(move || {
-                    let session = get_root_session(server.name);
+                    let session = get_session(server.name);
                     run_root_command(session, server.name, command, colors.to_vec());
                 });
                 handles.push(handle);
@@ -26,18 +21,23 @@ pub fn multi_root_remote_command(server_label: &str, command: &'static str, colo
         }
     }
 
+    for handle in handles {
+        match handle.join() {
+            Ok(h) => h,
+            Err(err) => { eprintln!("Error: {err:?}"); return }
+        }
+    }
 }
 
 pub fn single_root_remote_command(server_name: &str, command: &str, colors: Vec<String>) {
-    let session = get_root_session(server_name);
+    let session = get_session(server_name);
     run_root_command(session, server_name, command, colors);
 }
 
-pub fn multi_remote_command(server_label: &'static str, command: &'static str, colors: &'static Vec<String>) {
+pub fn multi_remote_command(server_label: &'static str, command: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
     let mut handles = Vec::new();
-    let vec_data: Vec<Server> = serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize.");
 
-    for server in vec_data {
+    for server in servers {
         match server.label == server_label {
             true => {
                 let handle = thread::spawn(move || {
@@ -85,48 +85,25 @@ pub fn run_root_command(session: Session, server_name: &str, command: &str, colo
     channel.wait_close().unwrap();
 }
 
-fn run_command(mut session: ssh::Session, server_name: &str, command: &str, colors: Vec<String>) {
-    let cmd = command.as_bytes();
-    let mut channel = match session.channel_new() {
-        Ok(chan) => chan,
-        Err(err) => { eprintln!("Error: {err}"); return }
-    };
+fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
+    let mut channel = session.channel_session().unwrap();
 
-    match channel.open_session() {
-        Ok(chan) => chan,
-        Err(err) => eprintln!("Error: {err}")
-    }
-
-    match channel.request_exec(cmd) {
-        Ok(chan) => chan,
-        Err(err) => eprintln!("Error: {err}")
-    }
-
-    match channel.send_eof() {
-        Ok(chan) => chan,
-        Err(err) => eprintln!("Error: {err}")
-    }
-
-    let mut buf = Vec::new();
-    match channel.stdout().read_to_end(&mut buf) {
-        Ok(chan) => chan,
-        Err(_) => 0 as usize
-    };
-
-    let output = match from_utf8(&buf) {
-        Ok(out) => out,
-        Err(err) => { eprintln!("Error: {err}"); return }
-
-    };
+    channel.request_pty("vt10", None, None).unwrap();
+    channel.exec(&command).unwrap();
+    channel.send_eof().unwrap();
+    let mut buf = String::new();
+    channel.read_to_string(&mut buf).unwrap();
 
     println!();
     println!("{} Label: {} {} -> {} Command: {} {}", colors[1], colors[2], server_name,  colors[1], colors[2], command);
     println!("{}-------------------------{}", colors[1], colors[2]);
-    print!("{output}\n");
+    print!("{buf}\n");
+
+    channel.wait_close().unwrap();
 }
 
-pub fn get_root_session(server_name: &str) -> Session {
-    let vec_data: Vec<Server> = serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize.");
+pub fn get_session(server_name: &str) -> Session {
+    let vec_data: Vec<Server> = serde_json::from_str(&server_list().unwrap()).expect("Failed to deserialize...");
     let (mut server_sshport,mut server_user,mut server_address) = ("", "", "");
     let key_path = get_sshkey();
     for server in &vec_data {
@@ -153,30 +130,3 @@ pub fn get_root_session(server_name: &str) -> Session {
 
 }
 
-fn get_session(server_name: &str) -> ssh::Session {
-    let mut session = ssh::Session::new().unwrap();
-    session.set_host(&server_name.to_lowercase()).unwrap();
-
-    match session.parse_config(None) {
-        Ok(config) => config,
-        Err(err) => eprintln!("Error: {err}")
-    }
-
-    match session.connect() {
-        Ok(conn) => conn,
-        Err(err) => eprintln!("Error: {err}")
-    }
-
-    //println!("{:?}",session.is_server_known());
-    let pass_key = match get_passkey(server_name.to_string()) {
-        Ok(pk) => pk,
-        Err(_) => String::new()
-    };
-
-    match session.userauth_publickey_auto(Some(&pass_key)) {
-        Ok(pk) => pk,
-        Err(err) => eprintln!("Error: {err}")
-    }
-
-    session
-}
