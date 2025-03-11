@@ -6,6 +6,28 @@ use std::io::{Read, Write};
 use std::str::from_utf8;
 use std::{thread, usize};
 
+pub fn multi_root_remote_command(server_label: &str, command: &'static str, colors: &'static Vec<String>) {
+    let mut handles = Vec::new();
+    let vec_data: Vec<Server> = match serde_json::from_str(&server_list().unwrap()) {
+        Ok(list) => list,
+        Err(err) => { eprintln!("Error: {err}"); return }
+    };
+
+    for server in vec_data {
+        match server.label == server_label {
+            true => {
+                let handle = thread::spawn(move || {
+                    let session = get_root_session(server.name);
+                    run_root_command(session, server.name, command, colors.to_vec());
+                });
+                handles.push(handle);
+            },
+            false => continue
+        }
+    }
+
+}
+
 pub fn single_root_remote_command(server_name: &str, command: &str, colors: Vec<String>) {
     let session = get_root_session(server_name);
     run_root_command(session, server_name, command, colors);
