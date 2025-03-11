@@ -17,8 +17,8 @@ pub struct Server {
     pub sshport: &'static str
 }
 
-pub fn print_server_details(vec_data: Vec<Server>, server_name: &'static str) {
-    for server in vec_data {
+pub fn print_server_details(servers: Vec<Server>, server_name: &'static str) {
+    for server in servers {
         match !server_name.is_empty() {
             true => match server.name == server_name {
                 true => print!(

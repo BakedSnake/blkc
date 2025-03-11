@@ -14,7 +14,8 @@ fn main() {
         Ok(json) => json,
         Err(err) => { eprintln!("Error: {err}"); return }
     };
-    let servers = serde_json::from_str(servers_json).expect("Failed to deserialize.");
+    let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
+    let static_servers: &'static Vec<Server> = Box::leak(Box::new(servers.clone()));
 
     match static_args.len() {
         5 => {
@@ -27,7 +28,7 @@ fn main() {
                     match &args[2].contains("--label") {
                         true => {
                             let handle = thread::spawn(move || {
-                                multi_remote_command(&static_args[3], &static_args[4], static_colors)
+                                multi_remote_command(&static_args[3], &static_args[4], static_colors, &static_servers)
                             });
                             handle.join().unwrap();
                         },
@@ -45,7 +46,7 @@ fn main() {
                     match &args[2].contains("--label") {
                         true => {
                             let handle = thread::spawn(move || {
-                                multi_remote_command(&static_args[3], &static_args[4], static_colors)
+                                multi_root_remote_command(&static_args[3], &static_args[4], static_colors, &static_servers)
                             });
                             handle.join().unwrap();
                         },
