@@ -93,9 +93,17 @@ pub fn get_userpass(server_name: String) -> std::io::Result<String> {
     }
 }
 
-pub fn get_sshkey() -> String {
-    let home_cfg = std::env::var("HOME").unwrap().to_string() + "/.config/blkc/blkc.conf";
-    let file = File::open(home_cfg).unwrap();
+pub fn get_sshkey() -> std::io::Result<String> {
+    let home = match std::env::var("HOME") {
+        Ok(env) => env,
+        Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::Other, err))
+    };
+    let config = "/.config/blkc/blkc.conf";
+    let config_path = String::from(home + config);
+    let file = match File::open(config_path) {
+        Ok(cfg) => cfg,
+        Err(err) => return Err(err)
+    };
     let reader = BufReader::new(file);
     let mut key_path = String::new();
 
@@ -111,12 +119,20 @@ pub fn get_sshkey() -> String {
         }
     }
 
-    key_path
+    Ok(key_path)
 }
 
 pub fn server_list<'a>() -> std::io::Result<&'a str> {
-    let list_path = std::env::var("HOME").unwrap().to_string() + "/.config/blkc/list.json";
-    let mut file = File::open(String::from(list_path)).expect("Failed to open file.");
+    let home = match std::env::var("HOME") {
+        Ok(env) => env,
+        Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::Other, err))
+    };
+    let config = "/.config/blkc/list.json";
+    let list_path = String::from(home + config);
+    let mut file = match File::open(list_path) {
+        Ok(list) => list,
+        Err(err) => return Err(err)
+    };
     let mut json_string = String::new();
     file.read_to_string(&mut json_string)?;
     let static_str: &'static str = Box::leak(json_string.into_boxed_str());
