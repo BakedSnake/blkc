@@ -29,9 +29,9 @@ pub fn multi_root_remote_command(server_label: &str, command: &'static str, colo
     }
 }
 
-pub fn single_root_remote_command(server_name: &str, command: &str, colors: Vec<String>) {
+pub fn single_root_remote_command(server_name: &str, command: &str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
     let session = get_session(server_name);
-    run_root_command(session, server_name, command, colors);
+    run_root_command(session, server_name, command, colors.to_vec());
 }
 
 pub fn multi_remote_command(server_label: &'static str, command: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
@@ -59,9 +59,21 @@ pub fn multi_remote_command(server_label: &'static str, command: &'static str, c
     }
 }
 
-pub fn single_remote_command(server_name: &str, command: &str, colors: Vec<String>) {
+pub fn single_remote_command(server_name: &'static str, command: &'static str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
     let session = get_session(server_name);
-    run_command(session, server_name, command, colors);
+    run_command(session, server_name, command, colors.to_vec());
+}
+
+pub fn help(_: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
+    println!("{}Usage:", colors[1]);
+    println!("-------------------------{}", colors[2]);
+    println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
+    println!("--nocolor,    -C    Disable color output");
+    println!("--run,        -r    Run command as user");
+    println!("--srun,       -x   Run command as root user");
+    println!("--name,       -n    Name of the server");
+    println!("--label,      -l    Label of the server\n");
+    println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
 }
 
 pub fn run_root_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
