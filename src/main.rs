@@ -30,7 +30,10 @@ fn main() {
                             let handle = thread::spawn(move || {
                                 multi_remote_command(&static_args[3], &static_args[4], static_colors, &static_servers)
                             });
-                            handle.join().unwrap();
+                            match handle.join() {
+                                Ok(_) => (),
+                                Err(err) => eprintln!("{err:?}")
+                            }
                         },
                         false => ()
                     }
@@ -48,7 +51,10 @@ fn main() {
                             let handle = thread::spawn(move || {
                                 multi_root_remote_command(&static_args[3], &static_args[4], static_colors, &static_servers)
                             });
-                            handle.join().unwrap();
+                            match handle.join() {
+                                Ok(_) => (),
+                                Err(err) => eprintln!("{err:?}")
+                            }
                         },
                         false => ()
                     }
