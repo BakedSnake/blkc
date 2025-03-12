@@ -109,15 +109,18 @@ pub fn get_session(server_name: &str) -> Session {
 
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
-    ssh_auth(&sess, server.user);
+    let _ = ssh_auth(&sess, server.user);
     assert!(sess.authenticated());
 
     sess
 }
 
-pub fn ssh_auth(sess: &Session, server_user: &str) {
+pub fn ssh_auth(sess: &Session, server_user: &str) -> std::io::Result<()> {
     let _agent = sess.agent().unwrap();
-    let key_path = get_sshkey();
+    let key_path = match get_sshkey() {
+        Ok(path) => path,
+        Err(err) => return Err(err)
+    };
     let pubkey_str = format!("{}.pub", key_path);
     let pubkey_path = Path::new(&pubkey_str);
     let privkey_path = Path::new(&key_path);
@@ -126,6 +129,8 @@ pub fn ssh_auth(sess: &Session, server_user: &str) {
         Ok(_) => (),
         Err(err) => eprintln!("Error: {err}")
     }
+
+    Ok(())
 }
 
 pub fn get_tcp_conn(server: &Server) -> TcpStream {
