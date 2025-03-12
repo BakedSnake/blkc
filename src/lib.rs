@@ -17,6 +17,12 @@ pub struct Server {
     pub sshport: &'static str
 }
 
+impl Server {
+    pub fn new() -> Self {
+        Self { id: -2, label: "None", name: "None", user: "None", address: "None", sshport: "None" }
+    }
+}
+
 pub fn print_server_details(servers: Vec<Server>, server_name: &'static str) {
     for server in servers {
         match !server_name.is_empty() {
