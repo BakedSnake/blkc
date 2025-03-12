@@ -103,26 +103,13 @@ fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<S
 }
 
 pub fn get_session(server_name: &str) -> Session {
-    let servers_json = match server_list() {
-        Ok(json) => json,
-        Err(err) => { eprintln!("Error: {err}"); "" }
-    };
-    let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
-    let (mut server_sshport,mut server_user,mut server_address) = ("", "", "");
-    for server in &servers {
-        if server.name == server_name {
-            server_sshport = server.sshport;
-            server_user = server.user;
-            server_address = server.address;
-        }
-    }
-
-    let tcp = TcpStream::connect(format!("{}:{}", server_address, server_sshport)).unwrap();
+    let server = get_server_to_conn(server_name);
+    let tcp = get_tcp_conn(&server);
     let mut sess = Session::new().unwrap();
 
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
-    ssh_auth(&sess, server_user);
+    ssh_auth(&sess, server.user);
     assert!(sess.authenticated());
 
     sess
@@ -139,4 +126,30 @@ pub fn ssh_auth(sess: &Session, server_user: &str) {
         Ok(_) => (),
         Err(err) => eprintln!("Error: {err}")
     }
+}
+
+pub fn get_tcp_conn(server: &Server) -> TcpStream {
+    let tcp_stream = match TcpStream::connect(format!("{}:{}", server.address, server.sshport)) {
+        Ok(tcp) => tcp,
+        Err(err) => panic!("Error: {err}")
+    };
+
+    tcp_stream
+}
+
+pub fn get_server_to_conn(server_name: &str) -> Server {
+    let mut server_to_conn = Server::new();
+    let servers_json = match server_list() {
+        Ok(json) => json,
+        Err(err) => { eprintln!("Error: {err}"); "" }
+    };
+    let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
+
+    for server in &servers {
+        if server.name == server_name {
+            server_to_conn = server.clone();
+        }
+    }
+
+    server_to_conn
 }
