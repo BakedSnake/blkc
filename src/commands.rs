@@ -109,7 +109,6 @@ pub fn get_session(server_name: &str) -> Session {
     };
     let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
     let (mut server_sshport,mut server_user,mut server_address) = ("", "", "");
-    let key_path = get_sshkey();
     for server in &servers {
         if server.name == server_name {
             server_sshport = server.sshport;
@@ -120,17 +119,24 @@ pub fn get_session(server_name: &str) -> Session {
 
     let tcp = TcpStream::connect(format!("{}:{}", server_address, server_sshport)).unwrap();
     let mut sess = Session::new().unwrap();
+
+    sess.set_tcp_stream(tcp);
+    sess.handshake().unwrap();
+    ssh_auth(&sess, server_user);
+    assert!(sess.authenticated());
+
+    sess
+}
+
+pub fn ssh_auth(sess: &Session, server_user: &str) {
     let _agent = sess.agent().unwrap();
+    let key_path = get_sshkey();
     let pubkey_str = format!("{}.pub", key_path);
     let pubkey_path = Path::new(&pubkey_str);
     let privkey_path = Path::new(&key_path);
 
-    sess.set_tcp_stream(tcp);
-    sess.handshake().unwrap();
-    sess.userauth_pubkey_file(server_user, Some(pubkey_path), privkey_path, Some("")).unwrap();
-    assert!(sess.authenticated());
-
-    sess
-
+    match sess.userauth_pubkey_file(server_user, Some(pubkey_path), privkey_path, Some("")) {
+        Ok(_) => (),
+        Err(err) => eprintln!("Error: {err}")
+    }
 }
-
