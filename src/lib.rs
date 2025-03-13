@@ -23,7 +23,7 @@ impl Server {
     }
 }
 
-pub fn get_colors(args: Vec<String>) -> Vec<String> {
+pub fn get_colors(args: &Vec<String>) -> Vec<String> {
     let empty = String::from("");
     let colors: Vec<String>;
 

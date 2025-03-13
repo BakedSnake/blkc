@@ -42,20 +42,16 @@ static COMMANDS: [Command; 14] = [
 
 fn main() {
     let args            : Vec<String>           = std::env::args().collect();
-    let colors          : Vec<String>           = get_colors(args.clone());
-    let static_args     : &'static Vec<String>  = Box::leak(Box::new(args.clone()));
-    let static_colors   : &'static Vec<String>  = Box::leak(Box::new(colors.clone()));
-
-    if args.len() < 1 {
-        return
-    }
+    let colors          : Vec<String>           = get_colors(&args);
+    let static_args     : &'static Vec<String>  = Box::leak(Box::new(args));
+    let static_colors   : &'static Vec<String>  = Box::leak(Box::new(colors));
 
     let servers_json = match server_list() {
         Ok(json) => json,
-        Err(err) => { eprintln!("Error: {err}"); return }
+        Err(err) => { eprintln!("Error: {err}"); exit(1) }
     };
     let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
-    let static_servers: &'static Vec<Server> = Box::leak(Box::new(servers.clone()));
+    let static_servers: &'static Vec<Server> = Box::leak(Box::new(servers));
 
     let command = if static_args.len() > 1 { static_args[1].trim() } else { "" };
     let opt     = if static_args.len() > 2 { static_args[2].trim() } else { "" };
@@ -65,11 +61,11 @@ fn main() {
     match static_args.len() >= 5 {
         true => match COMMANDS.iter().find(|cmd| cmd.name == command && cmd.option == opt) {
             Some(cmd) => (cmd.run)(&query, rm_cmd, static_colors, static_servers),
-            None => { eprintln!("Error: Unknown command."); exit(1) }
+            None => { eprintln!("Error: Command not found."); exit(1) }
         },
         false => match COMMANDS.iter().find(|cmd| cmd.name == command) {
             Some(cmd) => (cmd.run)(&opt, "", static_colors, &static_servers),
-            None => { eprintln!("Error: Unknown command."); exit(1) }
+            None => { eprintln!("Error: Command not found."); exit(1) }
         },
     }
 }
