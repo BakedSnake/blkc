@@ -70,7 +70,7 @@ pub fn help(_: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
     println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
     println!("--nocolor,    -C    Disable color output");
     println!("--run,        -r    Run command as user");
-    println!("--srun,       -x   Run command as root user");
+    println!("--srun,       -x    Run command as root user");
     println!("--name,       -n    Name of the server");
     println!("--label,      -l    Label of the server\n");
     println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")

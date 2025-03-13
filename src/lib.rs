@@ -25,7 +25,7 @@ impl Server {
 
 pub fn print_server_details(server_name: &'static str, _command: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
     for server in servers {
-        match !server_name.is_empty() {
+        match server_name != "all" {
             true => match server.name == server_name {
                 true => print!(
                     "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
