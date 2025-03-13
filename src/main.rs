@@ -2,25 +2,38 @@ pub mod commands;
 
 use blkc::*;
 use commands::*;
-#[allow(unused_imports)]
-use std::thread; // TODO
+use std::process::exit;
 
 #[allow(dead_code)]
 struct Command {
     name: &'static str,
     description: &'static str,
-    run: fn(cmd: &str, opt: &str) -> fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
+    option: &'static str,
+    run: fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
 }
 
-static COMMANDS: [Command; 8] = [
-    Command{ name: "--show", description: "Show server list.", run: command_handler },
-    Command{ name: "-s", description: "Show server list.", run: command_handler },
-    Command{ name: "--run", description: "Run command on a remote host, or multiple remote hosts", run: command_handler },
-    Command{ name: "-r", description: "Run command on a remote host, or multiple remote hosts", run: command_handler },
-    Command{ name: "--srun", description: "Run command as root on a remote host, or multiple remote hosts", run: command_handler },
-    Command{ name: "-x", description: "Run command as root on a remote host, or multiple remote hosts", run: command_handler },
-    Command{ name: "--help", description: "Print help menu.", run: command_handler },
-    Command{ name: "-h", description: "Print help menu.", run: command_handler },
+static DESCRIPTIONS: [&str; 6] = [
+    "Show server list.",
+    "Run a command on a single remote host.",
+    "Run a command on a multiple remote host.",
+    "Run a command as root on a single remote host.",
+    "Run a command as root on a multiple remote host.",
+    "Print help menu."
+];
+
+static COMMANDS: [Command; 12] = [
+    Command{ name: "--show",    description: DESCRIPTIONS[0], option: "",           run: print_server_details       },
+    Command{ name: "-s",        description: DESCRIPTIONS[0], option: "",           run: print_server_details       },
+    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name",     run: single_remote_command      },
+    Command{ name: "--run",     description: DESCRIPTIONS[2], option: "--label",    run: multi_remote_command       },
+    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n",         run: single_remote_command      },
+    Command{ name: "-r",        description: DESCRIPTIONS[2], option: "-l",         run: multi_remote_command       },
+    Command{ name: "--srun",    description: DESCRIPTIONS[3], option: "--name",     run: single_root_remote_command },
+    Command{ name: "--srun",    description: DESCRIPTIONS[4], option: "--label",    run: multi_root_remote_command  },
+    Command{ name: "-x",        description: DESCRIPTIONS[3], option: "-n",         run: single_root_remote_command },
+    Command{ name: "-x",        description: DESCRIPTIONS[4], option: "-l",         run: multi_root_remote_command  },
+    Command{ name: "--help",    description: DESCRIPTIONS[5], option: "",           run: help                       },
+    Command{ name: "-h",        description: DESCRIPTIONS[5], option: "",           run: help                       },
 ];
 
 fn main() {
@@ -46,87 +59,21 @@ fn main() {
     let rm_cmd  = if static_args.len() > 4 { static_args[4].trim() } else { "" };
 
     match static_args.len() {
-        5 => match COMMANDS.iter().find(|cmd| cmd.name == command) {
-            Some(cmd) => (cmd.run)(command, opt)(&query, rm_cmd, static_colors, static_servers),
-            None => {
-                eprintln!("Error: Unknown command.");
-                std::process::exit(1)
-            }
+        5 => match COMMANDS.iter().find(|cmd| cmd.name == command && cmd.option == opt) {
+            Some(cmd) => (cmd.run)(&query, rm_cmd, static_colors, static_servers),
+            None => { eprintln!("Error: Unknown command."); exit(1) }
         },
         3 => match COMMANDS.iter().find(|cmd| cmd.name == command) {
-            Some(cmd) => {
-                if opt != "all" {
-                    (cmd.run)(command, opt) (&opt, "", static_colors, &static_servers);
-                } else {
-                    (cmd.run)(command, opt) ("", "", static_colors, &static_servers);
-                }
-            }
-            None => {
-                eprintln!("Error: Unknown command.");
-                std::process::exit(1)
-            }
+            Some(cmd) => (cmd.run)(&opt, "", static_colors, &static_servers),
+            None => { eprintln!("Error: Unknown command."); exit(1) }
         },
         1 => match COMMANDS.iter().find(|cmd| cmd.name == command) {
-            Some(cmd) => (cmd.run)(command, opt)("", "", static_colors, &static_servers),
-            None => {
-                eprintln!("Error: Unknown command.");
-                std::process::exit(1)
-            }
+            Some(cmd) => (cmd.run)("", "", static_colors, &static_servers),
+            None => { eprintln!("Error: Unknown command."); exit(1) }
         },
         _ => match COMMANDS.iter().find(|cmd| cmd.name == "--help") {
-            Some(cmd) => (cmd.run)(command, opt)("", "", static_colors, &static_servers),
-            None => {
-                eprintln!("Error: Unknown command.");
-                std::process::exit(1)
-            }
+            Some(cmd) => (cmd.run)("", "", static_colors, &static_servers),
+            None => { eprintln!("Error: Unknown command."); exit(1) }
         },
-    }
-}
-
-fn command_handler(cmd: &str, opt: &str) -> fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>) {
-    match cmd {
-        "-r" => match opt {
-            "--name" => single_remote_command,
-            "-n" => single_remote_command,
-            "--label" => multi_remote_command,
-            "-l" => multi_remote_command,
-            _ => panic!("Not a real command option.")
-        },
-        "--run" => match opt {
-            "--name" => single_remote_command,
-            "-n" => single_remote_command,
-            "--label" => multi_remote_command,
-            "-l" => multi_remote_command,
-            _ => panic!("Not a real command option.")
-        },
-        "-x" => match opt {
-            "--name" => single_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            "-n" => single_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            "--label" => multi_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            "-l" => multi_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            _ => panic!("Not a real command option.")
-        },
-        "--srun" => match opt {
-            "--name" => single_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            "-n" => single_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            "--label" => multi_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            "-l" => multi_root_remote_command
-                as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-            _ => panic!("Not a real command option.")
-        },
-        "-s" => print_server_details,
-        "--show" => print_server_details,
-        "-h" => help
-            as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-        "--help" => help
-            as fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>),
-        _ => panic!("Invalid command.")
     }
 }
