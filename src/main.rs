@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod sshcfg;
 
 use blkc::*;
 use commands::*;
