@@ -64,18 +64,6 @@ pub fn single_remote_command(server_name: &'static str, command: &'static str, c
     run_command(session, server_name, command, colors.to_vec());
 }
 
-pub fn help(_: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
-    println!("{}Usage:", colors[1]);
-    println!("-------------------------{}", colors[2]);
-    println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
-    println!("--nocolor,    -C    Disable color output");
-    println!("--run,        -r    Run command as user");
-    println!("--srun,       -x    Run command as root user");
-    println!("--name,       -n    Name of the server");
-    println!("--label,      -l    Label of the server\n");
-    println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
-}
-
 pub fn run_root_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
     let password = get_userpass(server_name.to_string()).unwrap();
     let pass_fmt = format!("{password}\n");
@@ -112,6 +100,39 @@ fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<S
     print!("{buf}\n");
 
     channel.wait_close().unwrap();
+}
+
+pub fn print_server_details(server_name: &'static str, _command: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
+    for server in servers {
+        match server_name != "all" {
+            true => match server.name == server_name {
+                true => print!(
+                    "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
+                    server.name, server.user, server.address, server.sshport, server.label
+                ),
+                false => ()
+            },
+            false => match server.id > 0 {
+                true => print!(
+                    "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
+                    server.name, server.user, server.address, server.sshport, server.label
+                ),
+                false => ()
+            }
+        }
+    }
+}
+
+pub fn help(_: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
+    println!("{}Usage:", colors[1]);
+    println!("-------------------------{}", colors[2]);
+    println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
+    println!("--nocolor,    -C    Disable color output");
+    println!("--run,        -r    Run command as user");
+    println!("--srun,       -x    Run command as root user");
+    println!("--name,       -n    Name of the server");
+    println!("--label,      -l    Label of the server\n");
+    println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
 }
 
 pub fn get_session(server_name: &str) -> Session {
