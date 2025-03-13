@@ -6,10 +6,10 @@ use std::process::exit;
 
 #[allow(dead_code)]
 struct Command {
-    name: &'static str,
-    description: &'static str,
-    option: &'static str,
-    run: fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
+    name:           &'static str,
+    description:    &'static str,
+    option:         &'static str,
+    run:            fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
 }
 
 static DESCRIPTIONS: [&str; 6] = [
@@ -37,10 +37,10 @@ static COMMANDS: [Command; 12] = [
 ];
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let static_args: &'static Vec<String> = Box::leak(Box::new(args.clone()));
-    let colors: Vec<String> = get_colors(args.clone());
-    let static_colors: &'static Vec<String> = Box::leak(Box::new(colors.clone()));
+    let args            : Vec<String>           = std::env::args().collect();
+    let colors          : Vec<String>           = get_colors(args.clone());
+    let static_args     : &'static Vec<String>  = Box::leak(Box::new(args.clone()));
+    let static_colors   : &'static Vec<String>  = Box::leak(Box::new(colors.clone()));
 
     if args.len() < 1 {
         return
