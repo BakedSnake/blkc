@@ -13,16 +13,17 @@ struct Command {
     run:            fn(&'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
 }
 
-static DESCRIPTIONS: [&str; 6] = [
+static DESCRIPTIONS: [&str; 7] = [
     "Show server list.",
     "Run a command on a single remote host.",
     "Run a command on a multiple remote host.",
     "Run a command as root on a single remote host.",
     "Run a command as root on a multiple remote host.",
-    "Print help menu."
+    "Print help menu.",
+    "Show version."
 ];
 
-static COMMANDS: [Command; 12] = [
+static COMMANDS: [Command; 14] = [
     Command{ name: "--show",    description: DESCRIPTIONS[0], option: "",           run: print_server_details       },
     Command{ name: "-s",        description: DESCRIPTIONS[0], option: "",           run: print_server_details       },
     Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name",     run: single_remote_command      },
@@ -35,6 +36,8 @@ static COMMANDS: [Command; 12] = [
     Command{ name: "-x",        description: DESCRIPTIONS[4], option: "-l",         run: multi_root_remote_command  },
     Command{ name: "--help",    description: DESCRIPTIONS[5], option: "",           run: help                       },
     Command{ name: "-h",        description: DESCRIPTIONS[5], option: "",           run: help                       },
+    Command{ name: "--version", description: DESCRIPTIONS[6], option: "",           run: version                    },
+    Command{ name: "-v",        description: DESCRIPTIONS[6], option: "",           run: version                    },
 ];
 
 fn main() {
@@ -64,16 +67,8 @@ fn main() {
             Some(cmd) => (cmd.run)(&query, rm_cmd, static_colors, static_servers),
             None => { eprintln!("Error: Unknown command."); exit(1) }
         },
-        3 => match COMMANDS.iter().find(|cmd| cmd.name == command) {
+        _ => match COMMANDS.iter().find(|cmd| cmd.name == command) {
             Some(cmd) => (cmd.run)(&opt, "", static_colors, &static_servers),
-            None => { eprintln!("Error: Unknown command."); exit(1) }
-        },
-        1 => match COMMANDS.iter().find(|cmd| cmd.name == command) {
-            Some(cmd) => (cmd.run)("", "", static_colors, &static_servers),
-            None => { eprintln!("Error: Unknown command."); exit(1) }
-        },
-        _ => match COMMANDS.iter().find(|cmd| cmd.name == "--help") {
-            Some(cmd) => (cmd.run)("", "", static_colors, &static_servers),
             None => { eprintln!("Error: Unknown command."); exit(1) }
         },
     }
