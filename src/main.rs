@@ -62,12 +62,12 @@ fn main() {
     let query   = if static_args.len() > 3 { static_args[3].trim() } else { "" };
     let rm_cmd  = if static_args.len() > 4 { static_args[4].trim() } else { "" };
 
-    match static_args.len() {
-        5 => match COMMANDS.iter().find(|cmd| cmd.name == command && cmd.option == opt) {
+    match static_args.len() >= 5 {
+        true => match COMMANDS.iter().find(|cmd| cmd.name == command && cmd.option == opt) {
             Some(cmd) => (cmd.run)(&query, rm_cmd, static_colors, static_servers),
             None => { eprintln!("Error: Unknown command."); exit(1) }
         },
-        _ => match COMMANDS.iter().find(|cmd| cmd.name == command) {
+        false => match COMMANDS.iter().find(|cmd| cmd.name == command) {
             Some(cmd) => (cmd.run)(&opt, "", static_colors, &static_servers),
             None => { eprintln!("Error: Unknown command."); exit(1) }
         },
