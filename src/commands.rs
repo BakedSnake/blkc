@@ -4,7 +4,7 @@ use crate::sshcfg::get_session;
 use std::io::{Read, Write};
 use std::thread;
 
-pub fn multi_root_remote_command(server_label: &str, command: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
+pub fn multi_root_remote_command(server_label: &str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
     let mut handles = Vec::new();
 
     for server in servers {
@@ -28,12 +28,12 @@ pub fn multi_root_remote_command(server_label: &str, command: &'static str, colo
     }
 }
 
-pub fn single_root_remote_command(server_name: &str, command: &str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
+pub fn single_root_remote_command(server_name: &str, command: &str, _opt: &'static str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
     let session = get_session(server_name);
     run_root_command(session, server_name, command, colors.to_vec());
 }
 
-pub fn multi_remote_command(server_label: &'static str, command: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
+pub fn multi_remote_command(server_label: &'static str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
     let mut handles = Vec::new();
 
     for server in servers {
@@ -58,7 +58,7 @@ pub fn multi_remote_command(server_label: &'static str, command: &'static str, c
     }
 }
 
-pub fn single_remote_command(server_name: &'static str, command: &'static str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
+pub fn single_remote_command(server_name: &'static str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
     let session = get_session(server_name);
     run_command(session, server_name, command, colors.to_vec());
 }
@@ -101,7 +101,7 @@ fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<S
     channel.wait_close().unwrap();
 }
 
-pub fn print_server_details(server_name: &'static str, _command: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
+pub fn print_server_details(server_name: &'static str, _command: &'static str, _opt: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
     for server in servers {
         match server_name != "all" {
             true => match server.name == server_name {
@@ -122,7 +122,7 @@ pub fn print_server_details(server_name: &'static str, _command: &'static str, _
     }
 }
 
-pub fn help(_: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
+pub fn help(_: &str, _: &str, _opt: &str, colors: &Vec<String>, _: &Vec<Server>) {
     println!("{}Usage:", colors[1]);
     println!("-------------------------{}", colors[2]);
     println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
@@ -134,6 +134,6 @@ pub fn help(_: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
     println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
 }
 
-pub fn version(_: &str, _: &str, _: &Vec<String>, _: &Vec<Server>) {
+pub fn version(_: &str, _: &str, _: &str, _: &Vec<String>, _: &Vec<Server>) {
     println!("blkc: v0.2.0");
 }
