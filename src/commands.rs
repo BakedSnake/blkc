@@ -162,5 +162,5 @@ pub fn help(_: &str, _: &str, _opt: &str, colors: &Vec<String>, _: &Vec<Server>)
 }
 
 pub fn version(_: &str, _: &str, _: &str, _: &Vec<String>, _: &Vec<Server>) {
-    println!("blkc: v0.2.0");
+    println!("blkc: v0.2.1");
 }
