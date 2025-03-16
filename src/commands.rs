@@ -1,5 +1,6 @@
 use ssh2::Session;
 use blkc::*;
+use crate::COMMANDS;
 use crate::sshcfg::get_session;
 use std::io::{Read, Write};
 use std::thread;
@@ -101,22 +102,42 @@ fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<S
     channel.wait_close().unwrap();
 }
 
-pub fn print_server_details(server_name: &'static str, _command: &'static str, _opt: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
+pub fn print_server_details(server_name: &'static str, _command: &'static str, opt: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
     for server in servers {
-        match server_name != "all" {
-            true => match server.name == server_name {
-                true => print!(
-                    "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
-                    server.name, server.user, server.address, server.sshport, server.label
-                ),
-                false => ()
-            },
-            false => match server.id > 0 {
-                true => print!(
-                    "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
-                    server.name, server.user, server.address, server.sshport, server.label
-                ),
-                false => ()
+        if opt == "-n" || opt == "--name" {
+            match server_name != "all" {
+                true => match server.name == server_name {
+                    true => print!(
+                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
+                        server.name, server.user, server.address, server.sshport, server.label
+                    ),
+                    false => ()
+                },
+                false => match server.id > 0 {
+                    true => print!(
+                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
+                        server.name, server.user, server.address, server.sshport, server.label
+                    ),
+                    false => ()
+                }
+            }
+        }
+        if opt == "-l" || opt == "--label" {
+            match server_name != "all" {
+                true => match server.label == server_name {
+                    true => print!(
+                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
+                        server.name, server.user, server.address, server.sshport, server.label
+                    ),
+                    false => ()
+                },
+                false => match server.id > 0 {
+                    true => print!(
+                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
+                        server.name, server.user, server.address, server.sshport, server.label
+                    ),
+                    false => ()
+                }
             }
         }
     }
@@ -125,12 +146,18 @@ pub fn print_server_details(server_name: &'static str, _command: &'static str, _
 pub fn help(_: &str, _: &str, _opt: &str, colors: &Vec<String>, _: &Vec<Server>) {
     println!("{}Usage:", colors[1]);
     println!("-------------------------{}", colors[2]);
-    println!("blkc [--run|srun] [--name|label] name|label [command [argument...]]\n");
-    println!("--nocolor,    -C    Disable color output");
-    println!("--run,        -r    Run command as user");
-    println!("--srun,       -x    Run command as root user");
-    println!("--name,       -n    Name of the server");
-    println!("--label,      -l    Label of the server\n");
+    println!("{}blkc [{}--run|srun{}] [{}--name|label{}]{} name|label {}[{}command {}[{}argument...{}]]{}\n",
+        colors[0], colors[2], colors[0], colors[2], colors[0], colors[2], colors[0], colors[2], colors[0], colors[2], colors[0], colors[2]
+    );
+
+    for command in COMMANDS.iter() {
+        if !command.option.is_empty() {
+            println!("{}{} {} [ target ]:{}\n \t{}\n", colors[0], command.name, command.option, colors[2], command.description)
+        } else {
+            println!("{}{}:{} {}\n \t{}\n", colors[0], command.name, command.option, colors[2], command.description)
+        }
+    }
+    println!("{}-C:{}\tDisable color output\n", colors[0], colors[2]);
     println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
 }
 

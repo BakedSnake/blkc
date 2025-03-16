@@ -5,7 +5,6 @@ use blkc::*;
 use commands::*;
 use std::process::exit;
 
-#[allow(dead_code)]
 struct Command {
     name:           &'static str,
     description:    &'static str,
@@ -31,20 +30,20 @@ static VALID_OPTIONS: [&str; 4] = [
 ];
 
 static COMMANDS: [Command; 14] = [
-    Command{ name: "--show",    description: DESCRIPTIONS[0], option: "",           run: print_server_details       },
-    Command{ name: "-s",        description: DESCRIPTIONS[0], option: "",           run: print_server_details       },
-    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name",     run: single_remote_command      },
-    Command{ name: "--run",     description: DESCRIPTIONS[2], option: "--label",    run: multi_remote_command       },
-    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n",         run: single_remote_command      },
-    Command{ name: "-r",        description: DESCRIPTIONS[2], option: "-l",         run: multi_remote_command       },
-    Command{ name: "--srun",    description: DESCRIPTIONS[3], option: "--name",     run: single_root_remote_command },
-    Command{ name: "--srun",    description: DESCRIPTIONS[4], option: "--label",    run: multi_root_remote_command  },
-    Command{ name: "-x",        description: DESCRIPTIONS[3], option: "-n",         run: single_root_remote_command },
-    Command{ name: "-x",        description: DESCRIPTIONS[4], option: "-l",         run: multi_root_remote_command  },
-    Command{ name: "--help",    description: DESCRIPTIONS[5], option: "",           run: help                       },
-    Command{ name: "-h",        description: DESCRIPTIONS[5], option: "",           run: help                       },
-    Command{ name: "--version", description: DESCRIPTIONS[6], option: "",           run: version                    },
-    Command{ name: "-v",        description: DESCRIPTIONS[6], option: "",           run: version                    },
+    Command{ name: "--show",    description: DESCRIPTIONS[0], option: "--name| --label",    run: print_server_details       },
+    Command{ name: "-s",        description: DESCRIPTIONS[0], option: "-n| -l",             run: print_server_details       },
+    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name",             run: single_remote_command      },
+    Command{ name: "--run",     description: DESCRIPTIONS[2], option: "--label",            run: multi_remote_command       },
+    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n",                 run: single_remote_command      },
+    Command{ name: "-r",        description: DESCRIPTIONS[2], option: "-l",                 run: multi_remote_command       },
+    Command{ name: "--srun",    description: DESCRIPTIONS[3], option: "--name",             run: single_root_remote_command },
+    Command{ name: "--srun",    description: DESCRIPTIONS[4], option: "--label",            run: multi_root_remote_command  },
+    Command{ name: "-x",        description: DESCRIPTIONS[3], option: "-n",                 run: single_root_remote_command },
+    Command{ name: "-x",        description: DESCRIPTIONS[4], option: "-l",                 run: multi_root_remote_command  },
+    Command{ name: "--help",    description: DESCRIPTIONS[5], option: "",                   run: help                       },
+    Command{ name: "-h",        description: DESCRIPTIONS[5], option: "",                   run: help                       },
+    Command{ name: "--version", description: DESCRIPTIONS[6], option: "",                   run: version                    },
+    Command{ name: "-v",        description: DESCRIPTIONS[6], option: "",                   run: version                    },
 ];
 
 fn main() {
@@ -91,7 +90,7 @@ fn main() {
             None => { eprintln!("Error: Command not found."); exit(1) }
         },
         false => match COMMANDS.iter().find(|cmd| cmd.name == command) {
-            Some(cmd) => (cmd.run)(&query, "", &opt, static_colors, &static_servers),
+            Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_colors, &static_servers),
             None => { eprintln!("Error: Command not found."); exit(1) }
         },
     }
