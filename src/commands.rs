@@ -70,24 +70,14 @@ pub fn print_server_details(server_name: &'static str, _command: &'static str, o
             colors[1], colors[2], server.sshport, colors[1], colors[2], server.label
         );
 
-        if opt == "-n" || opt == "--name" {
+        if opt == "-n" || opt == "--name" || opt == "-l" || opt == "--label"{
             match server_name != "all" {
                 true => match server.name == server_name {
                     true => print!("{print_d}"),
-                    false => ()
-                },
-                false => match server.id > 0 {
-                    true => print!("{print_d}"),
-                    false => ()
-                }
-            }
-        }
-
-        if opt == "-l" || opt == "--label" {
-            match server_name != "all" {
-                true => match server.label == server_name {
-                    true => print!("{print_d}"),
-                    false => ()
+                    false => match server.label == server_name {
+                        true => print!("{print_d}"),
+                        false => ()
+                    }
                 },
                 false => match server.id > 0 {
                     true => print!("{print_d}"),
