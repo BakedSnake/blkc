@@ -28,15 +28,13 @@ static VALID_OPTIONS: [&str; 4] = [
     "-l"
 ];
 
-static COMMANDS: [Command; 12] = [
+static COMMANDS: [Command; 10] = [
     Command{ name: "--show",    description: DESCRIPTIONS[0], option: "--name| --label",    run: print_server_details       },
     Command{ name: "-s",        description: DESCRIPTIONS[0], option: "-n| -l",             run: print_server_details       },
     Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name| --label",    run: remote_command             },
     Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n| -l",             run: remote_command             },
-    Command{ name: "--srun",    description: DESCRIPTIONS[2], option: "--name",             run: single_root_remote_command },
-    Command{ name: "--srun",    description: DESCRIPTIONS[3], option: "--label",            run: multi_root_remote_command  },
-    Command{ name: "-x",        description: DESCRIPTIONS[2], option: "-n",                 run: single_root_remote_command },
-    Command{ name: "-x",        description: DESCRIPTIONS[3], option: "-l",                 run: multi_root_remote_command  },
+    Command{ name: "--srun",    description: DESCRIPTIONS[2], option: "--name| --label",    run: root_remote_command        },
+    Command{ name: "-x",        description: DESCRIPTIONS[2], option: "-n| -l",             run: root_remote_command        },
     Command{ name: "--help",    description: DESCRIPTIONS[4], option: "",                   run: help                       },
     Command{ name: "-h",        description: DESCRIPTIONS[4], option: "",                   run: help                       },
     Command{ name: "--version", description: DESCRIPTIONS[5], option: "",                   run: version                    },
