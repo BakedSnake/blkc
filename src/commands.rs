@@ -1,6 +1,6 @@
 use blkc::*;
 use crate::COMMANDS;
-use crate::sshcfg::get_session;
+use crate::sshcfg::{get_session,run_command,run_root_command};
 use std::thread;
 
 pub fn root_remote_command(query: &str, command: &'static str, opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {

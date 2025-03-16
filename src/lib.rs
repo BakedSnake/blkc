@@ -1,8 +1,7 @@
 use std::fs::File;
 use std::process::Command;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Read};
 use serde::{Deserialize, Serialize};
-use ssh2::Session;
 
 pub const ROOT_COLOR_PREFIX: &str = "\x1b[33m";
 pub const MAIN_COLOR_PREFIX: &str = "\x1b[32m";
@@ -24,43 +23,6 @@ impl Server {
     }
 }
 
-pub fn run_root_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
-    let password = get_userpass(server_name.to_string()).unwrap();
-    let pass_fmt = format!("{password}\n");
-    let cmd = format!("sudo {command}");
-    let mut channel = session.channel_session().unwrap();
-
-    channel.request_pty("vt10", None, None).unwrap();
-    channel.exec(&cmd).unwrap();
-    channel.write_all(pass_fmt.as_bytes()).unwrap();
-    channel.send_eof().unwrap();
-    let mut buf = String::new();
-    channel.read_to_string(&mut buf).unwrap();
-
-    println!();
-    println!("{} Label: {} {} -> {} Command: {} {}", colors[0], colors[2], server_name,  colors[0], colors[2], command);
-    println!("{}-------------------------{}", colors[0], colors[2]);
-    print!("{buf}\n");
-
-    channel.wait_close().unwrap();
-}
-
-pub fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
-    let mut channel = session.channel_session().unwrap();
-
-    channel.request_pty("vt10", None, None).unwrap();
-    channel.exec(&command).unwrap();
-    channel.send_eof().unwrap();
-    let mut buf = String::new();
-    channel.read_to_string(&mut buf).unwrap();
-
-    println!();
-    println!("{} Label: {} {} -> {} Command: {} {}", colors[1], colors[2], server_name,  colors[1], colors[2], command);
-    println!("{}-------------------------{}", colors[1], colors[2]);
-    print!("{buf}\n");
-
-    channel.wait_close().unwrap();
-}
 pub fn get_colors(args: &Vec<String>) -> Vec<String> {
     let empty = String::from("");
     let colors: Vec<String>;
