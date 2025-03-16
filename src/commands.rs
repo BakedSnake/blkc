@@ -161,6 +161,6 @@ pub fn help(_: &str, _: &str, _opt: &str, colors: &Vec<String>, _: &Vec<Server>)
     println!("`--srun` and `--run` cannot be used at the same time.\nThe same goes for `--name` and `--label`.\n")
 }
 
-pub fn version(_: &str, _: &str, _: &str, _: &Vec<String>, _: &Vec<Server>) {
-    println!("blkc: v0.2.1");
+pub fn version(_: &str, _: &str, _: &str, colors: &Vec<String>, _: &Vec<Server>) {
+    println!("{}blkc:{} v0.2.1", colors[1], colors[2]);
 }
