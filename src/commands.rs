@@ -3,33 +3,42 @@ use crate::COMMANDS;
 use crate::sshcfg::get_session;
 use std::thread;
 
-pub fn multi_root_remote_command(server_label: &str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
-    let mut handles = Vec::new();
-
-    for server in servers {
-        match server.label == server_label {
-            true => {
-                let handle = thread::spawn(move || {
+pub fn root_remote_command(query: &str, command: &'static str, opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
+    if opt == "-n" || opt == "--name" {
+        for server in servers {
+            match server.name == query {
+                true => {
                     let session = get_session(server.name);
                     run_root_command(session, server.name, command, colors.to_vec());
-                });
-                handles.push(handle);
-            },
-            false => continue
+                },
+                false => continue
+            }
         }
     }
 
-    for handle in handles {
-        match handle.join() {
-            Ok(h) => h,
-            Err(err) => { eprintln!("Error: {err:?}"); return }
+    if opt == "-l" || opt == "--label" {
+        let mut handles = Vec::new();
+
+        for server in servers {
+            match server.label == query {
+                true => {
+                    let handle = thread::spawn(move || {
+                        let session = get_session(server.name);
+                        run_root_command(session, server.name, command, colors.to_vec());
+                    });
+                    handles.push(handle);
+                },
+                false => continue
+            }
+        }
+
+        for handle in handles {
+            match handle.join() {
+                Ok(h) => h,
+                Err(err) => { eprintln!("Error: {err:?}"); return }
+            }
         }
     }
-}
-
-pub fn single_root_remote_command(server_name: &str, command: &str, _opt: &'static str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
-    let session = get_session(server_name);
-    run_root_command(session, server_name, command, colors.to_vec());
 }
 
 pub fn remote_command(query: &'static str, command: &'static str, opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
