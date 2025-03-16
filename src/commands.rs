@@ -1,8 +1,6 @@
-use ssh2::Session;
 use blkc::*;
 use crate::COMMANDS;
 use crate::sshcfg::get_session;
-use std::io::{Read, Write};
 use std::thread;
 
 pub fn multi_root_remote_command(server_label: &str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
@@ -64,78 +62,35 @@ pub fn single_remote_command(server_name: &'static str, command: &'static str, _
     run_command(session, server_name, command, colors.to_vec());
 }
 
-pub fn run_root_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
-    let password = get_userpass(server_name.to_string()).unwrap();
-    let pass_fmt = format!("{password}\n");
-    let cmd = format!("sudo {command}");
-    let mut channel = session.channel_session().unwrap();
-
-    channel.request_pty("vt10", None, None).unwrap();
-    channel.exec(&cmd).unwrap();
-    channel.write_all(pass_fmt.as_bytes()).unwrap();
-    channel.send_eof().unwrap();
-    let mut buf = String::new();
-    channel.read_to_string(&mut buf).unwrap();
-
-    println!();
-    println!("{} Label: {} {} -> {} Command: {} {}", colors[0], colors[2], server_name,  colors[0], colors[2], command);
-    println!("{}-------------------------{}", colors[0], colors[2]);
-    print!("{buf}\n");
-
-    channel.wait_close().unwrap();
-}
-
-fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
-    let mut channel = session.channel_session().unwrap();
-
-    channel.request_pty("vt10", None, None).unwrap();
-    channel.exec(&command).unwrap();
-    channel.send_eof().unwrap();
-    let mut buf = String::new();
-    channel.read_to_string(&mut buf).unwrap();
-
-    println!();
-    println!("{} Label: {} {} -> {} Command: {} {}", colors[1], colors[2], server_name,  colors[1], colors[2], command);
-    println!("{}-------------------------{}", colors[1], colors[2]);
-    print!("{buf}\n");
-
-    channel.wait_close().unwrap();
-}
-
-pub fn print_server_details(server_name: &'static str, _command: &'static str, opt: &'static str, _: &'static Vec<String>, servers: &'static Vec<Server>) {
+pub fn print_server_details(server_name: &'static str, _command: &'static str, opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
     for server in servers {
+        let print_d = format!(
+            "{}Name:{} {}\n{}User:{} {}\n{}Address:{} {}\n{}SSH Port:{} {}\n{}Label:{} {}\n--------------------\n",
+            colors[1], colors[2], server.name, colors[1], colors[2], server.user, colors[1], colors[2], server.address,
+            colors[1], colors[2], server.sshport, colors[1], colors[2], server.label
+        );
+
         if opt == "-n" || opt == "--name" {
             match server_name != "all" {
                 true => match server.name == server_name {
-                    true => print!(
-                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
-                        server.name, server.user, server.address, server.sshport, server.label
-                    ),
+                    true => print!("{print_d}"),
                     false => ()
                 },
                 false => match server.id > 0 {
-                    true => print!(
-                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
-                        server.name, server.user, server.address, server.sshport, server.label
-                    ),
+                    true => print!("{print_d}"),
                     false => ()
                 }
             }
         }
+
         if opt == "-l" || opt == "--label" {
             match server_name != "all" {
                 true => match server.label == server_name {
-                    true => print!(
-                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
-                        server.name, server.user, server.address, server.sshport, server.label
-                    ),
+                    true => print!("{print_d}"),
                     false => ()
                 },
                 false => match server.id > 0 {
-                    true => print!(
-                        "Name: {}\nUser: {}\nAddress: {}\nSSH Port: {}\nLabel: {}\n--------------------\n",
-                        server.name, server.user, server.address, server.sshport, server.label
-                    ),
+                    true => print!("{print_d}"),
                     false => ()
                 }
             }
