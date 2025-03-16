@@ -32,34 +32,43 @@ pub fn single_root_remote_command(server_name: &str, command: &str, _opt: &'stat
     run_root_command(session, server_name, command, colors.to_vec());
 }
 
-pub fn multi_remote_command(server_label: &'static str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
-    let mut handles = Vec::new();
-
-    for server in servers {
-        match server.label == server_label {
-            true => {
-                let handle = thread::spawn(move || {
+pub fn remote_command(query: &'static str, command: &'static str, opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
+    if opt == "-n" || opt == "--name" {
+        for server in servers {
+            match server.name == query {
+                true => {
                     let session = get_session(server.name);
                     run_command(session, server.name, command, colors.to_vec());
-
-                });
-                handles.push(handle);
-            },
-            false => continue
-        }
-    };
-
-    for handle in handles {
-        match handle.join() {
-            Ok(h) => h,
-            Err(err) => { eprintln!("Error: {err:?}"); return }
+                },
+                false => continue
+            }
         }
     }
-}
 
-pub fn single_remote_command(server_name: &'static str, command: &'static str, _opt: &'static str, colors: &'static Vec<String>, _: &'static Vec<Server>) {
-    let session = get_session(server_name);
-    run_command(session, server_name, command, colors.to_vec());
+    if opt == "-l" || opt == "--label" {
+        let mut handles = Vec::new();
+
+        for server in servers {
+            match server.label == query {
+                true => {
+                    let handle = thread::spawn(move || {
+                        let session = get_session(server.name);
+                        run_command(session, server.name, command, colors.to_vec());
+
+                    });
+                    handles.push(handle);
+                },
+                false => continue
+            }
+        };
+
+        for handle in handles {
+            match handle.join() {
+                Ok(h) => h,
+                Err(err) => { eprintln!("Error: {err:?}"); return }
+            }
+        }
+    }
 }
 
 pub fn print_server_details(server_name: &'static str, _command: &'static str, opt: &'static str, colors: &'static Vec<String>, servers: &'static Vec<Server>) {
