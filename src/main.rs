@@ -12,10 +12,9 @@ struct Command {
     run:            fn(&'static str, &'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
 }
 
-static DESCRIPTIONS: [&str; 7] = [
+static DESCRIPTIONS: [&str; 6] = [
     "Show server list.",
-    "Run a command on a single remote host.",
-    "Run a command on a multiple remote host.",
+    "Run a command on a single or multiple remote hosts.",
     "Run a command as root on a single remote host.",
     "Run a command as root on a multiple remote host.",
     "Print help menu.",
@@ -29,21 +28,19 @@ static VALID_OPTIONS: [&str; 4] = [
     "-l"
 ];
 
-static COMMANDS: [Command; 14] = [
+static COMMANDS: [Command; 12] = [
     Command{ name: "--show",    description: DESCRIPTIONS[0], option: "--name| --label",    run: print_server_details       },
     Command{ name: "-s",        description: DESCRIPTIONS[0], option: "-n| -l",             run: print_server_details       },
-    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name",             run: single_remote_command      },
-    Command{ name: "--run",     description: DESCRIPTIONS[2], option: "--label",            run: multi_remote_command       },
-    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n",                 run: single_remote_command      },
-    Command{ name: "-r",        description: DESCRIPTIONS[2], option: "-l",                 run: multi_remote_command       },
-    Command{ name: "--srun",    description: DESCRIPTIONS[3], option: "--name",             run: single_root_remote_command },
-    Command{ name: "--srun",    description: DESCRIPTIONS[4], option: "--label",            run: multi_root_remote_command  },
-    Command{ name: "-x",        description: DESCRIPTIONS[3], option: "-n",                 run: single_root_remote_command },
-    Command{ name: "-x",        description: DESCRIPTIONS[4], option: "-l",                 run: multi_root_remote_command  },
-    Command{ name: "--help",    description: DESCRIPTIONS[5], option: "",                   run: help                       },
-    Command{ name: "-h",        description: DESCRIPTIONS[5], option: "",                   run: help                       },
-    Command{ name: "--version", description: DESCRIPTIONS[6], option: "",                   run: version                    },
-    Command{ name: "-v",        description: DESCRIPTIONS[6], option: "",                   run: version                    },
+    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name| --label",    run: remote_command             },
+    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n| -l",             run: remote_command             },
+    Command{ name: "--srun",    description: DESCRIPTIONS[2], option: "--name",             run: single_root_remote_command },
+    Command{ name: "--srun",    description: DESCRIPTIONS[3], option: "--label",            run: multi_root_remote_command  },
+    Command{ name: "-x",        description: DESCRIPTIONS[2], option: "-n",                 run: single_root_remote_command },
+    Command{ name: "-x",        description: DESCRIPTIONS[3], option: "-l",                 run: multi_root_remote_command  },
+    Command{ name: "--help",    description: DESCRIPTIONS[4], option: "",                   run: help                       },
+    Command{ name: "-h",        description: DESCRIPTIONS[4], option: "",                   run: help                       },
+    Command{ name: "--version", description: DESCRIPTIONS[5], option: "",                   run: version                    },
+    Command{ name: "-v",        description: DESCRIPTIONS[5], option: "",                   run: version                    },
 ];
 
 fn main() {
@@ -66,7 +63,7 @@ fn main() {
 
     let command = match static_args.iter().find(|arg| cmd_name_list.contains(&arg.trim())) {
         Some(arg) => arg,
-        None => { eprintln!("Error: Command not found."); exit(1) }
+        None => { eprintln!("Command error: Command not found."); exit(1) }
     };
 
     let opt = match static_args.iter().find(|arg| VALID_OPTIONS.contains(&arg.trim())) {
@@ -84,14 +81,8 @@ fn main() {
         None => ""
     };
 
-    match static_args.len() >= 5 {
-        true => match COMMANDS.iter().find(|cmd| cmd.name == command && cmd.option == opt) {
-            Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_colors, static_servers),
-            None => { eprintln!("Error: Command not found."); exit(1) }
-        },
-        false => match COMMANDS.iter().find(|cmd| cmd.name == command) {
-            Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_colors, &static_servers),
-            None => { eprintln!("Error: Command not found."); exit(1) }
-        },
+    match COMMANDS.iter().find(|cmd| cmd.name == command) {
+        Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_colors, static_servers),
+        None => { eprintln!("Error: Command not found."); exit(1) }
     }
 }
