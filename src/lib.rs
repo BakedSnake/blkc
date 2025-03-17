@@ -23,6 +23,15 @@ impl Server {
     }
 }
 
+pub fn parse_cmd_name<'a>(cmd_name: &'a str, cmd: &'a str) -> &'a str {
+    let names: Vec<&str> = cmd_name.split("| ").collect();
+    let long = names[0];
+    let short = names[1];
+
+    if cmd == long { return long }
+    if cmd == short { return short } else { "" }
+}
+
 pub fn get_colors(args: &Vec<String>) -> Vec<String> {
     let empty = String::from("");
     let colors: Vec<String>;
