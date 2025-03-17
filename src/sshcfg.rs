@@ -1,10 +1,18 @@
 use ssh2::Session;
-use blkc::{server_list,Server,get_sshkey,get_userpass};
-use std::net::TcpStream;
 use std::path::Path;
+use std::net::TcpStream;
 use std::io::{Read, Write};
+use blkc::{server_list,
+    Server,
+    get_sshkey,
+    get_userpass,
+};
+use crate::format::{
+    print_result,
+    print_root_result
+};
 
-pub fn run_root_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
+pub fn run_root_command(session: Session, server_name: &str, command: &str) {
     let password = get_userpass(server_name.to_string()).unwrap();
     let pass_fmt = format!("{password}\n");
     let cmd = format!("sudo {command}");
@@ -17,15 +25,12 @@ pub fn run_root_command(session: Session, server_name: &str, command: &str, colo
     let mut buf = String::new();
     channel.read_to_string(&mut buf).unwrap();
 
-    println!();
-    println!("{} Label: {} {} -> {} Command: {} {}", colors[0], colors[2], server_name,  colors[0], colors[2], command);
-    println!("{}-------------------------{}", colors[0], colors[2]);
-    print!("{buf}\n");
+    print_root_result(server_name, command, buf);
 
     channel.wait_close().unwrap();
 }
 
-pub fn run_command(session: Session, server_name: &str, command: &str, colors: Vec<String>) {
+pub fn run_command(session: Session, server_name: &str, command: &str) {
     let mut channel = session.channel_session().unwrap();
 
     channel.request_pty("vt10", None, None).unwrap();
@@ -34,10 +39,7 @@ pub fn run_command(session: Session, server_name: &str, command: &str, colors: V
     let mut buf = String::new();
     channel.read_to_string(&mut buf).unwrap();
 
-    println!();
-    println!("{} Label: {} {} -> {} Command: {} {}", colors[1], colors[2], server_name,  colors[1], colors[2], command);
-    println!("{}-------------------------{}", colors[1], colors[2]);
-    print!("{buf}\n");
+    print_result(server_name, command, buf);
 
     channel.wait_close().unwrap();
 }
