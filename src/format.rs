@@ -43,5 +43,5 @@ pub fn print_help_command() {
 }
 
 pub fn print_version() {
-    println!("{}blkc:{} v0.2.1", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
+    println!("{}blkc:{} v0.2.2", MAIN_COLOR_PREFIX, MAIN_COLOR_SUFFIX);
 }
