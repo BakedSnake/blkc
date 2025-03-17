@@ -13,34 +13,6 @@ struct Command {
     run:            fn(&'static str, &'static str, &'static str, &'static Vec<Server>)
 }
 
-static DESCRIPTIONS: [&str; 5] = [
-    "Show server list.",
-    "Run a command on a single or multiple remote hosts.",
-    "Run a command as root on a single or multiple remote host.",
-    "Print help menu.",
-    "Show version."
-];
-
-static VALID_OPTIONS: [&str; 4] = [
-    "--name",
-    "--label",
-    "-n",
-    "-l"
-];
-
-static COMMANDS: [Command; 10] = [
-    Command{ name: "--show",    description: DESCRIPTIONS[0], option: "[--name| --label]",  run: print_server_details       },
-    Command{ name: "-s",        description: DESCRIPTIONS[0], option: "[-n| -l]",           run: print_server_details       },
-    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "[--name| --label]",  run: remote_command             },
-    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "[-n| -l]",           run: remote_command             },
-    Command{ name: "--srun",    description: DESCRIPTIONS[2], option: "[--name| --label]",  run: root_remote_command        },
-    Command{ name: "-x",        description: DESCRIPTIONS[2], option: "[-n| -l]",           run: root_remote_command        },
-    Command{ name: "--help",    description: DESCRIPTIONS[3], option: "",                   run: help                       },
-    Command{ name: "-h",        description: DESCRIPTIONS[3], option: "",                   run: help                       },
-    Command{ name: "--version", description: DESCRIPTIONS[4], option: "",                   run: version                    },
-    Command{ name: "-v",        description: DESCRIPTIONS[4], option: "",                   run: version                    },
-];
-
 fn main() {
     let args            : Vec<String>           = std::env::args().collect();
     let static_args     : &'static Vec<String>  = Box::leak(Box::new(args));
@@ -52,14 +24,9 @@ fn main() {
     let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
     let static_servers: &'static Vec<Server> = Box::leak(Box::new(servers));
 
-    let mut cmd_name_list: Vec<&str> = vec![];
-    for command in COMMANDS.iter() {
-        cmd_name_list.push(command.name);
-    }
-
-    let command = match static_args.iter().find(|arg| cmd_name_list.contains(&arg.trim())) {
+    let command = match static_args.iter().find(|arg| VALID_COMMANDS.contains(&arg.trim())) {
         Some(arg) => arg,
-        None => { eprintln!("Command error: Command not found."); exit(1) }
+        None => { println!("Command error: Command not found."); exit(1) }
     };
 
     let opt = match static_args.iter().find(|arg| VALID_OPTIONS.contains(&arg.trim())) {
@@ -77,8 +44,45 @@ fn main() {
         None => ""
     };
 
-    match COMMANDS.iter().find(|cmd| cmd.name == command) {
+    match COMMANDS.iter().find(|cmd| parse_cmd_name(cmd.name.trim(), command) == command) {
         Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_servers),
         None => { eprintln!("Error: Command not found."); exit(1) }
     }
 }
+
+static COMMANDS: [Command; 5] = [
+    Command{ name: "--show| -s",    description: DESCRIPTIONS[0], option: "[-n| -l| --name| --label]",  run: print_server_details       },
+    Command{ name: "--run| -r",     description: DESCRIPTIONS[1], option: "[-n| -l| --name| --label]",  run: remote_command             },
+    Command{ name: "--srun| -x",    description: DESCRIPTIONS[2], option: "[-n| -l| --name| --label]",  run: root_remote_command        },
+    Command{ name: "--help| -h",    description: DESCRIPTIONS[3], option: "",                           run: help                       },
+    Command{ name: "--version| -v", description: DESCRIPTIONS[4], option: "",                           run: version                    },
+];
+
+static DESCRIPTIONS: [&str; 5] = [
+    "Show server list.",
+    "Run a command on a single or multiple remote hosts.",
+    "Run a command as root on a single or multiple remote host.",
+    "Print help menu.",
+    "Show version."
+];
+
+static VALID_OPTIONS: [&str; 4] = [
+    "--name",
+    "--label",
+    "-n",
+    "-l"
+];
+
+static VALID_COMMANDS: [&str; 10] = [
+    "--run",
+    "--srun",
+    "--show",
+    "--help",
+    "--version",
+    "-r",
+    "-x",
+    "-s",
+    "-h",
+    "-v"
+];
+
