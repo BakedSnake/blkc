@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod sshcfg;
+pub mod format;
 
 use blkc::*;
 use commands::*;
@@ -9,14 +10,13 @@ struct Command {
     name:           &'static str,
     description:    &'static str,
     option:         &'static str,
-    run:            fn(&'static str, &'static str, &'static str, &'static Vec<String>, &'static Vec<Server>)
+    run:            fn(&'static str, &'static str, &'static str, &'static Vec<Server>)
 }
 
-static DESCRIPTIONS: [&str; 6] = [
+static DESCRIPTIONS: [&str; 5] = [
     "Show server list.",
     "Run a command on a single or multiple remote hosts.",
-    "Run a command as root on a single remote host.",
-    "Run a command as root on a multiple remote host.",
+    "Run a command as root on a single or multiple remote host.",
     "Print help menu.",
     "Show version."
 ];
@@ -29,23 +29,21 @@ static VALID_OPTIONS: [&str; 4] = [
 ];
 
 static COMMANDS: [Command; 10] = [
-    Command{ name: "--show",    description: DESCRIPTIONS[0], option: "--name| --label",    run: print_server_details       },
-    Command{ name: "-s",        description: DESCRIPTIONS[0], option: "-n| -l",             run: print_server_details       },
-    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "--name| --label",    run: remote_command             },
-    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "-n| -l",             run: remote_command             },
-    Command{ name: "--srun",    description: DESCRIPTIONS[2], option: "--name| --label",    run: root_remote_command        },
-    Command{ name: "-x",        description: DESCRIPTIONS[2], option: "-n| -l",             run: root_remote_command        },
-    Command{ name: "--help",    description: DESCRIPTIONS[4], option: "",                   run: help                       },
-    Command{ name: "-h",        description: DESCRIPTIONS[4], option: "",                   run: help                       },
-    Command{ name: "--version", description: DESCRIPTIONS[5], option: "",                   run: version                    },
-    Command{ name: "-v",        description: DESCRIPTIONS[5], option: "",                   run: version                    },
+    Command{ name: "--show",    description: DESCRIPTIONS[0], option: "[--name| --label]",  run: print_server_details       },
+    Command{ name: "-s",        description: DESCRIPTIONS[0], option: "[-n| -l]",           run: print_server_details       },
+    Command{ name: "--run",     description: DESCRIPTIONS[1], option: "[--name| --label]",  run: remote_command             },
+    Command{ name: "-r",        description: DESCRIPTIONS[1], option: "[-n| -l]",           run: remote_command             },
+    Command{ name: "--srun",    description: DESCRIPTIONS[2], option: "[--name| --label]",  run: root_remote_command        },
+    Command{ name: "-x",        description: DESCRIPTIONS[2], option: "[-n| -l]",           run: root_remote_command        },
+    Command{ name: "--help",    description: DESCRIPTIONS[3], option: "",                   run: help                       },
+    Command{ name: "-h",        description: DESCRIPTIONS[3], option: "",                   run: help                       },
+    Command{ name: "--version", description: DESCRIPTIONS[4], option: "",                   run: version                    },
+    Command{ name: "-v",        description: DESCRIPTIONS[4], option: "",                   run: version                    },
 ];
 
 fn main() {
     let args            : Vec<String>           = std::env::args().collect();
-    let colors          : Vec<String>           = get_colors(&args);
     let static_args     : &'static Vec<String>  = Box::leak(Box::new(args));
-    let static_colors   : &'static Vec<String>  = Box::leak(Box::new(colors));
 
     let servers_json = match server_list() {
         Ok(json) => json,
@@ -80,7 +78,7 @@ fn main() {
     };
 
     match COMMANDS.iter().find(|cmd| cmd.name == command) {
-        Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_colors, static_servers),
+        Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_servers),
         None => { eprintln!("Error: Command not found."); exit(1) }
     }
 }
