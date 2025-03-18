@@ -3,10 +3,6 @@ use std::process::Command;
 use std::io::{BufRead, BufReader, Read};
 use serde::{Deserialize, Serialize};
 
-pub const ROOT_COLOR_PREFIX: &str = "\x1b[33m";
-pub const MAIN_COLOR_PREFIX: &str = "\x1b[32m";
-pub const MAIN_COLOR_SUFFIX: &str = "\x1b[0m";
-
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Server {
     pub id: i32,
@@ -30,23 +26,6 @@ pub fn parse_cmd_name<'a>(cmd_name: &'a str, cmd: &'a str) -> &'a str {
 
     if cmd == long { return long }
     if cmd == short { return short } else { "" }
-}
-
-pub fn get_colors(args: &Vec<String>) -> Vec<String> {
-    let empty = String::from("");
-    let colors: Vec<String>;
-
-    if args.contains(&"-C".to_string()) || args.contains(&"--nocolor".to_string()) {
-        let em = &empty.clone();
-        colors = vec![em.to_string(), em.to_string(), em.to_string()];
-    } else {
-        colors = vec![
-            String::from(ROOT_COLOR_PREFIX),
-            String::from(MAIN_COLOR_PREFIX),
-            String::from(MAIN_COLOR_SUFFIX)
-        ]
-    }
-    colors
 }
 
 pub fn get_userpass(server_name: String) -> std::io::Result<String> {
