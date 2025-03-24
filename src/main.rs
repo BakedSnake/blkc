@@ -4,18 +4,65 @@ pub mod format;
 
 use blkc::*;
 use commands::*;
+use clap::{Parser, Subcommand};
 use std::process::exit;
 
-struct Command {
-    name:           &'static str,
-    description:    &'static str,
-    option:         &'static str,
-    run:            fn(&'static str, &'static str, &'static str, &'static Vec<Server>)
+#[derive(Parser, Debug)]
+#[command(version, about)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Cmd
+}
+
+#[derive(Subcommand, Debug)]
+enum Cmd {
+    #[command(name = "run", alias = "-r")]
+    /// Run a command on a single or multiple remote hosts
+    Run {
+        /// Name of the remote host
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// Label of the remote host
+        #[arg(short, long)]
+        label: Option<String>,
+
+        /// Command to run on remote host
+        #[arg(short, long, required = true)]
+        command: String,
+    },
+    #[command(name = "exec", alias = "-x")]
+    /// Run a command as root on a single or multiple remote hosts
+    Exec {
+        /// Name of the remote host
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// Label of the remote host
+        #[arg(short, long)]
+        label: Option<String>,
+
+        /// Command to run on remote host
+        #[arg(short, long, required = true)]
+        command: String,
+    },
+    #[command(name = "show", alias = "-s")]
+    #[group(required = true, multiple = false, args = ["name", "label"])]
+    /// Show server list
+    Show {
+        /// Name of the remote host
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// Label of the remote host
+        #[arg(short, long)]
+        label: Option<String>,
+    }
 }
 
 fn main() {
-    let args            : Vec<String>           = std::env::args().collect();
-    let static_args     : &'static Vec<String>  = Box::leak(Box::new(args));
+    let cli = Cli::parse();
+    let static_cli = Box::leak(Box::new(cli));
 
     let servers_json = match server_list() {
         Ok(json) => json,
@@ -24,65 +71,48 @@ fn main() {
     let servers: Vec<Server> = serde_json::from_str(servers_json).expect("Failed to deserialize.");
     let static_servers: &'static Vec<Server> = Box::leak(Box::new(servers));
 
-    let command = match static_args.iter().find(|arg| VALID_COMMANDS.contains(&arg.trim())) {
-        Some(arg) => arg,
-        None => { println!("Command error: Command not found."); exit(1) }
-    };
-
-    let opt = match static_args.iter().find(|arg| VALID_OPTIONS.contains(&arg.trim())) {
-        Some(arg) => arg,
-        None => ""
-    };
-
-    let query = match static_args.windows(2).find(|pair| &pair[0].trim() == &opt) {
-        Some(pair) => &pair[1],
-        None => ""
-    };
-
-    let rm_cmd = match static_args.windows(2).find(|pair| &pair[0].trim() == &query) {
-        Some(pair) => &pair[1],
-        None => ""
-    };
-
-    match COMMANDS.iter().find(|cmd| parse_cmd_name(cmd.name.trim(), command) == command) {
-        Some(cmd) => (cmd.run)(&query, rm_cmd, &opt, static_servers),
-        None => { eprintln!("Error: Command not found."); exit(1) }
+    match &static_cli.command {
+        Cmd::Run { name, label, command } => {
+            match name {
+                Some(name) => if !name.is_empty() {
+                    remote_command(&name, &command, "-n", &static_servers);
+                },
+                None => ()
+            }
+            match label {
+                Some(label) => if !label.is_empty() {
+                    remote_command(&label, &command, "-l", &static_servers);
+                },
+                None => ()
+            }
+        },
+        Cmd::Exec { name, label, command } => {
+            match name {
+                Some(name) => if !name.is_empty() {
+                    root_remote_command(&name, &command, "-n", &static_servers);
+                },
+                None => ()
+            }
+            match label {
+                Some(label) => if !label.is_empty() {
+                    root_remote_command(&label, &command, "-l", &static_servers);
+                },
+                None => ()
+            }
+        },
+        Cmd::Show { name, label } => {
+            match name {
+                Some(name) => if !name.is_empty() {
+                    print_server_details(&name, "", "-n", &static_servers);
+                },
+                None => ()
+            }
+            match label {
+                Some(label) => if !label.is_empty() {
+                    print_server_details(&label, "", "-n", &static_servers);
+                },
+                None => ()
+            }
+        },
     }
 }
-
-static COMMANDS: [Command; 5] = [
-    Command{ name: "--show| -s",    description: DESCRIPTIONS[0], option: "[-n| -l| --name| --label]",  run: print_server_details       },
-    Command{ name: "--run| -r",     description: DESCRIPTIONS[1], option: "[-n| -l| --name| --label]",  run: remote_command             },
-    Command{ name: "--srun| -x",    description: DESCRIPTIONS[2], option: "[-n| -l| --name| --label]",  run: root_remote_command        },
-    Command{ name: "--help| -h",    description: DESCRIPTIONS[3], option: "",                           run: help                       },
-    Command{ name: "--version| -v", description: DESCRIPTIONS[4], option: "",                           run: version                    },
-];
-
-static DESCRIPTIONS: [&str; 5] = [
-    "Show server list.",
-    "Run a command on a single or multiple remote hosts.",
-    "Run a command as root on a single or multiple remote host.",
-    "Print help menu.",
-    "Show version."
-];
-
-static VALID_OPTIONS: [&str; 4] = [
-    "--name",
-    "--label",
-    "-n",
-    "-l"
-];
-
-static VALID_COMMANDS: [&str; 10] = [
-    "--run",
-    "--srun",
-    "--show",
-    "--help",
-    "--version",
-    "-r",
-    "-x",
-    "-s",
-    "-h",
-    "-v"
-];
-

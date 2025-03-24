@@ -103,11 +103,3 @@ pub fn print_server_details(server_name: &'static str, _: &'static str, opt: &'s
         }
     }
 }
-
-pub fn help(_: &str, _: &str, _opt: &str, _: &Vec<Server>) {
-    print_help_command();
-}
-
-pub fn version(_: &str, _: &str, _: &str, _: &Vec<Server>) {
-    print_version();
-}
