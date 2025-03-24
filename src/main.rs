@@ -75,13 +75,13 @@ fn main() {
         Cmd::Run { name, label, command } => {
             match name {
                 Some(name) => if !name.is_empty() {
-                    remote_command(&name, &command, "-n", &static_servers);
+                    remote_command(&name, &command, &static_servers);
                 },
                 None => ()
             }
             match label {
                 Some(label) => if !label.is_empty() {
-                    remote_command(&label, &command, "-l", &static_servers);
+                    multi_remote_command(&label, &command, &static_servers);
                 },
                 None => ()
             }
@@ -89,13 +89,13 @@ fn main() {
         Cmd::Exec { name, label, command } => {
             match name {
                 Some(name) => if !name.is_empty() {
-                    root_remote_command(&name, &command, "-n", &static_servers);
+                    root_remote_command(&name, &command, &static_servers);
                 },
                 None => ()
             }
             match label {
                 Some(label) => if !label.is_empty() {
-                    root_remote_command(&label, &command, "-l", &static_servers);
+                    multi_root_remote_command(&label, &command, &static_servers);
                 },
                 None => ()
             }
@@ -103,13 +103,13 @@ fn main() {
         Cmd::Show { name, label } => {
             match name {
                 Some(name) => if !name.is_empty() {
-                    print_server_details(&name, "", "-n", &static_servers);
+                    print_server_details(&name, &static_servers);
                 },
                 None => ()
             }
             match label {
                 Some(label) => if !label.is_empty() {
-                    print_server_details(&label, "", "-n", &static_servers);
+                    print_server_details(&label, &static_servers);
                 },
                 None => ()
             }
